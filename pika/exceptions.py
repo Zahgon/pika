@@ -108,7 +108,7 @@ class ConnectionClosed(AMQPConnectionError):
         :rtype: int
 
         """
-        return self.args[0]
+        pass
 
     @property
     def reply_text(self):
@@ -116,7 +116,7 @@ class ConnectionClosed(AMQPConnectionError):
         :rtype: str
 
         """
-        return self.args[1]
+        pass
 
 
 class ConnectionClosedByBroker(ConnectionClosed):
@@ -174,7 +174,7 @@ class ChannelClosed(AMQPChannelError):
         :rtype: int
 
         """
-        return self.args[0]
+        pass
 
     @property
     def reply_text(self):
@@ -182,7 +182,7 @@ class ChannelClosed(AMQPChannelError):
         :rtype: str
 
         """
-        return self.args[1]
+        pass
 
 
 class ChannelClosedByBroker(ChannelClosed):

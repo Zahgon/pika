@@ -70,20 +70,7 @@ def _retry_on_sigint(func):
     """Function decorator for retrying on SIGINT.
 
     """
-
-    @functools.wraps(func)
-    def retry_sigint_wrap(*args, **kwargs):
-        """Wrapper for decorated function"""
-        while True:
-            try:
-                return func(*args, **kwargs)
-            except pika.compat.SOCKET_ERROR as error:
-                if error.errno == errno.EINTR:
-                    continue
-                else:
-                    raise
-
-    return retry_sigint_wrap
+    pass
 
 
 class SocketConnectionMixin:
@@ -270,20 +257,7 @@ class _AsyncSocketConnector:
         :param BaseException | None result: value to pass in user's callback
 
         """
-        _LOGGER.debug('_AsyncSocketConnector._report_completion(%r); %s',
-                      result, self._sock)
-
-        assert isinstance(result, (BaseException, type(None))), (
-            '_AsyncSocketConnector._report_completion() expected exception or '
-            'None as result.', result)
-        assert self._state == self._STATE_ACTIVE, (
-            '_AsyncSocketConnector._report_completion() expected '
-            '_STATE_NOT_STARTED', self._state)
-
-        self._state = self._STATE_COMPLETED
-        self._cleanup()
-
-        self._on_done(result)
+        pass
 
     @_log_exceptions
     def _start_async(self):
@@ -291,38 +265,7 @@ class _AsyncSocketConnector:
         safe to call user's completion callback from here, if needed
 
         """
-        if self._state != self._STATE_ACTIVE:
-            # Must have been canceled by user before we were called
-            _LOGGER.debug(
-                'Abandoning sock=%s connection establishment to %s '
-                'due to inactive state=%s', self._sock, self._addr, self._state)
-            return
-
-        try:
-            self._sock.connect(self._addr)
-        except (Exception, pika.compat.SOCKET_ERROR) as error:  # pylint: disable=W0703
-            if (isinstance(error, pika.compat.SOCKET_ERROR) and
-                    error.errno in _CONNECTION_IN_PROGRESS_SOCK_ERROR_CODES):
-                # Connection establishment is pending
-                pass
-            else:
-                _LOGGER.error('%s.connect(%s) failed: %r', self._sock,
-                              self._addr, error)
-                self._report_completion(error)
-                return
-
-        # Get notified when the socket becomes writable
-        try:
-            self._nbio.set_writer(self._sock.fileno(), self._on_writable)
-        except Exception as error:  # pylint: disable=W0703
-            _LOGGER.exception('async.set_writer(%s) failed: %r', self._sock,
-                              error)
-            self._report_completion(error)
-            return
-        else:
-            self._watching_socket_events = True
-            _LOGGER.debug('Connection-establishment is in progress for %s.',
-                          self._sock)
+        pass
 
     @_log_exceptions
     def _on_writable(self):
@@ -330,27 +273,7 @@ class _AsyncSocketConnector:
         invoke user's completion callback.
 
         """
-        if self._state != self._STATE_ACTIVE:
-            # This should never happen since we remove the watcher upon
-            # `cancel()`
-            _LOGGER.error(
-                'Socket connection-establishment event watcher '
-                'called in inactive state (ignoring): %s; state=%s', self._sock,
-                self._state)
-            return
-
-        # The moment of truth...
-        error_code = self._sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
-        if not error_code:
-            _LOGGER.info('Socket connected: %s', self._sock)
-            result = None
-        else:
-            error_msg = os.strerror(error_code)
-            _LOGGER.error('Socket failed to connect: %s; error=%s (%s)',
-                          self._sock, error_code, error_msg)
-            result = pika.compat.SOCKET_ERROR(error_code, error_msg)
-
-        self._report_completion(result)
+        pass
 
 
 class _AsyncStreamConnector:
@@ -496,28 +419,7 @@ class _AsyncStreamConnector:
             `tuple(transport, protocol)` on success, exception on error
 
         """
-        _LOGGER.debug('_AsyncStreamConnector._report_completion(%r); %s',
-                      result, self._sock)
-
-        assert isinstance(result, (BaseException, tuple)), (
-            '_AsyncStreamConnector._report_completion() expected exception or '
-            'tuple as result.', result, self._state)
-        assert self._state == self._STATE_ACTIVE, (
-            '_AsyncStreamConnector._report_completion() expected '
-            '_STATE_ACTIVE', self._state)
-
-        self._state = self._STATE_COMPLETED
-
-        # Notify user
-        try:
-            self._on_done(result)
-        except Exception:
-            _LOGGER.exception('%r: _on_done(%r) failed.',
-                              self._report_completion, result)
-            raise
-        finally:
-            # NOTE: Close the socket on error, since we took ownership of it
-            self._cleanup(close=isinstance(result, BaseException))
+        pass
 
     @_log_exceptions
     def _start_async(self):
@@ -525,37 +427,7 @@ class _AsyncStreamConnector:
         safe to call user's completion callback from here if needed
 
         """
-        _LOGGER.debug('_AsyncStreamConnector._start_async(); %s', self._sock)
-
-        if self._state != self._STATE_ACTIVE:
-            # Must have been canceled by user before we were called
-            _LOGGER.debug(
-                'Abandoning streaming linkup due to inactive state '
-                'transition; state=%s; %s; .', self._state, self._sock)
-            return
-
-        # Link up protocol and transport if this is a plaintext linkup;
-        # otherwise kick-off SSL workflow first
-        if self._ssl_context is None:
-            self._linkup()
-        else:
-            _LOGGER.debug('Starting SSL handshake on %s', self._sock)
-
-            # Wrap our plain socket in ssl socket
-            try:
-                self._sock = self._ssl_context.wrap_socket(
-                    self._sock,
-                    server_side=False,
-                    do_handshake_on_connect=False,
-                    suppress_ragged_eofs=False,  # False = error on incoming EOF
-                    server_hostname=self._server_hostname)
-            except Exception as error:  # pylint: disable=W0703
-                _LOGGER.exception('SSL wrap_socket(%s) failed: %r', self._sock,
-                                  error)
-                self._report_completion(error)
-                return
-
-            self._do_ssl_handshake()
+        pass
 
     @_log_exceptions
     def _linkup(self):
@@ -563,118 +435,14 @@ class _AsyncStreamConnector:
         and invoke user's completion callback.
 
         """
-        _LOGGER.debug('_AsyncStreamConnector._linkup()')
-
-        transport = None
-
-        try:
-            # Create the protocol
-            try:
-                protocol = self._protocol_factory()
-            except Exception as error:
-                _LOGGER.exception('protocol_factory() failed: error=%r; %s',
-                                  error, self._sock)
-                raise
-
-            if self._ssl_context is None:
-                # Create plaintext streaming transport
-                try:
-                    transport = _AsyncPlaintextTransport(
-                        self._sock, protocol, self._nbio)
-                except Exception as error:
-                    _LOGGER.exception('PlainTransport() failed: error=%r; %s',
-                                      error, self._sock)
-                    raise
-            else:
-                # Create SSL streaming transport
-                try:
-                    transport = _AsyncSSLTransport(self._sock, protocol,
-                                                   self._nbio)
-                except Exception as error:
-                    _LOGGER.exception('SSLTransport() failed: error=%r; %s',
-                                      error, self._sock)
-                    raise
-
-            _LOGGER.debug('_linkup(): created transport %r', transport)
-
-            # Acquaint protocol with its transport
-            try:
-                protocol.connection_made(transport)
-            except Exception as error:
-                _LOGGER.exception(
-                    'protocol.connection_made(%r) failed: error=%r; %s',
-                    transport, error, self._sock)
-                raise
-
-            _LOGGER.debug('_linkup(): introduced transport to protocol %r; %r',
-                          transport, protocol)
-        except Exception as error:  # pylint: disable=W0703
-            result = error
-        else:
-            result = (transport, protocol)
-
-        self._report_completion(result)
+        pass
 
     @_log_exceptions
     def _do_ssl_handshake(self):
         """Perform asynchronous SSL handshake on the already wrapped socket
 
         """
-        _LOGGER.debug('_AsyncStreamConnector._do_ssl_handshake()')
-
-        if self._state != self._STATE_ACTIVE:
-            _LOGGER.debug(
-                '_do_ssl_handshake: Abandoning streaming linkup due '
-                'to inactive state transition; state=%s; %s; .', self._state,
-                self._sock)
-            return
-
-        done = False
-
-        try:
-            try:
-                self._sock.do_handshake()
-            except ssl.SSLError as error:
-                if error.errno == ssl.SSL_ERROR_WANT_READ:
-                    _LOGGER.debug('SSL handshake wants read; %s.', self._sock)
-                    self._watching_socket = True
-                    self._nbio.set_reader(self._sock.fileno(),
-                                          self._do_ssl_handshake)
-                    self._nbio.remove_writer(self._sock.fileno())
-                elif error.errno == ssl.SSL_ERROR_WANT_WRITE:
-                    _LOGGER.debug('SSL handshake wants write. %s', self._sock)
-                    self._watching_socket = True
-                    self._nbio.set_writer(self._sock.fileno(),
-                                          self._do_ssl_handshake)
-                    self._nbio.remove_reader(self._sock.fileno())
-                else:
-                    # Outer catch will report it
-                    raise
-            else:
-                done = True
-                _LOGGER.info('SSL handshake completed successfully: %s',
-                             self._sock)
-        except Exception as error:  # pylint: disable=W0703
-            _LOGGER.exception('SSL do_handshake failed: error=%r; %s', error,
-                              self._sock)
-            self._report_completion(error)
-            return
-
-        if done:
-            # Suspend I/O and link up transport with protocol
-            _LOGGER.debug(
-                '_do_ssl_handshake: removing watchers ahead of linkup: %s',
-                self._sock)
-            self._nbio.remove_reader(self._sock.fileno())
-            self._nbio.remove_writer(self._sock.fileno())
-            # So that our `_cleanup()` won't interfere with the transport's
-            # socket watcher configuration.
-            self._watching_socket = False
-            _LOGGER.debug(
-                '_do_ssl_handshake: pre-linkup removal of watchers is done; %s',
-                self._sock)
-
-            self._linkup()
+        pass
 
 
 class _AsyncTransportBase(  # pylint: disable=W0223
@@ -738,7 +506,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
 
         :rtype: pika.adapters.utils.nbio_interface.AbstractStreamProtocol
         """
-        return self._protocol
+        pass
 
     def get_write_buffer_size(self):
         """
@@ -784,26 +552,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
         :raises _AsyncTransportBase.RxEndOfFile: upon shutdown of input stream
 
         """
-        bytes_consumed = 0
-
-        while (self._state == self._STATE_ACTIVE and
-               bytes_consumed < self._MAX_CONSUME_BYTES):
-            data = self._sigint_safe_recv(self._sock, self._MAX_RECV_BYTES)
-            bytes_consumed += len(data)
-
-            # Empty data, should disconnect
-            if not data:
-                _LOGGER.error('Socket EOF; %s', self._sock)
-                raise self.RxEndOfFile()
-
-            # Pass the data to the protocol
-            try:
-                self._protocol.data_received(data)
-            except Exception as error:
-                _LOGGER.exception(
-                    'protocol.data_received() failed: error=%r; %s', error,
-                    self._sock)
-                raise
+        pass
 
     def _produce(self):
         """Utility method for use by subclasses to emit data from tx_buffers.
@@ -815,20 +564,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
                  socket error with errno.EINTR
 
         """
-        while self._tx_buffers:
-            num_bytes_sent = self._sigint_safe_send(self._sock,
-                                                    self._tx_buffers[0])
-
-            chunk = self._tx_buffers.popleft()
-            if num_bytes_sent < len(chunk):
-                _LOGGER.debug('Partial send, requeing remaining data; %s of %s',
-                              num_bytes_sent, len(chunk))
-                self._tx_buffers.appendleft(chunk[num_bytes_sent:])
-
-            self._tx_buffered_byte_count -= num_bytes_sent
-            assert self._tx_buffered_byte_count >= 0, (
-                '_AsyncTransportBase._produce() tx buffer size underflow',
-                self._tx_buffered_byte_count, self._state)
+        pass
 
     @staticmethod
     @_retry_on_sigint
@@ -843,7 +579,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
                  error with errno.EINTR
 
         """
-        return sock.recv(max_bytes)
+        pass
 
     @staticmethod
     @_retry_on_sigint
@@ -858,7 +594,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
                  error with errno.EINTR
 
         """
-        return sock.send(data)
+        pass
 
     @_log_exceptions
     def _deactivate(self):
@@ -878,18 +614,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
         references to other assets (protocol, etc.)
 
         """
-        if self._state != self._STATE_COMPLETED:
-            _LOGGER.info('Closing transport socket and unlinking: state=%s; %s',
-                         self._state, self._sock)
-            try:
-                self._sock.shutdown(socket.SHUT_RDWR)
-            except pika.compat.SOCKET_ERROR:
-                pass
-            self._sock.close()
-            self._sock = None
-            self._protocol = None
-            self._nbio = None
-            self._state = self._STATE_COMPLETED
+        pass
 
     @_log_exceptions
     def _initiate_abort(self, error):
@@ -954,30 +679,7 @@ class _AsyncTransportBase(  # pylint: disable=W0223
         :param BaseException | None error: None if being canceled by user;
             otherwise the exception corresponding to the the failed connection.
         """
-        _LOGGER.debug('Concluding transport shutdown: state=%s; error=%r',
-                      self._state, error)
-
-        if self._state == self._STATE_COMPLETED:
-            return
-
-        if error is not None and self._state != self._STATE_FAILED:
-            # Priority is given to user-initiated abort notification
-            assert self._state == self._STATE_ABORTED_BY_USER, (
-                '_AsyncTransportBase._connection_lost_notify_async() '
-                'expected _STATE_ABORTED_BY_USER', self._state)
-            return
-
-        # Inform protocol
-        try:
-            self._protocol.connection_lost(error)
-        except Exception as exc:  # pylint: disable=W0703
-            _LOGGER.exception('protocol.connection_lost(%r) failed: exc=%r; %s',
-                              error, exc, self._sock)
-            # Re-raise, since we've exhausted our normal failure notification
-            # mechanism (i.e., connection_lost())
-            raise
-        finally:
-            self._close_and_finalize()
+        pass
 
 
 class _AsyncPlaintextTransport(_AsyncTransportBase):
@@ -1037,85 +739,14 @@ class _AsyncPlaintextTransport(_AsyncTransportBase):
         limit is reached, transport becomes inactive, or failure.
 
         """
-        if self._state != self._STATE_ACTIVE:
-            _LOGGER.debug(
-                'Ignoring readability notification due to inactive '
-                'state: state=%s; %s', self._state, self._sock)
-            return
-
-        try:
-            self._consume()
-        except self.RxEndOfFile:
-            try:
-                keep_open = self._protocol.eof_received()
-            except Exception as error:  # pylint: disable=W0703
-                _LOGGER.exception(
-                    'protocol.eof_received() failed: error=%r; %s', error,
-                    self._sock)
-                self._initiate_abort(error)
-            else:
-                if keep_open:
-                    _LOGGER.info(
-                        'protocol.eof_received() elected to keep open: %s',
-                        self._sock)
-                    self._nbio.remove_reader(self._sock.fileno())
-                else:
-                    _LOGGER.info('protocol.eof_received() elected to close: %s',
-                                 self._sock)
-                    self._initiate_abort(None)
-        except (Exception, pika.compat.SOCKET_ERROR) as error:  # pylint: disable=W0703
-            if (isinstance(error, pika.compat.SOCKET_ERROR) and
-                    error.errno in _TRY_IO_AGAIN_SOCK_ERROR_CODES):
-                _LOGGER.debug('Recv would block on %s', self._sock)
-            else:
-                _LOGGER.exception(
-                    '_AsyncBaseTransport._consume() failed, aborting '
-                    'connection: error=%r; sock=%s; Caller\'s stack:\n%s',
-                    error, self._sock, ''.join(
-                        traceback.format_exception(*sys.exc_info())))
-                self._initiate_abort(error)
-        else:
-            if self._state != self._STATE_ACTIVE:
-                # Most likely our protocol's `data_received()` aborted the
-                # transport
-                _LOGGER.debug(
-                    'Leaving Plaintext consumer due to inactive '
-                    'state: state=%s; %s', self._state, self._sock)
+        pass
 
     @_log_exceptions
     def _on_socket_writable(self):
         """Handle writable socket notification
 
         """
-        if self._state != self._STATE_ACTIVE:
-            _LOGGER.debug(
-                'Ignoring writability notification due to inactive '
-                'state: state=%s; %s', self._state, self._sock)
-            return
-
-        # We shouldn't be getting called with empty tx buffers
-        assert self._tx_buffers, (
-            '_AsyncPlaintextTransport._on_socket_writable() called, '
-            'but _tx_buffers is empty.', self._state)
-
-        try:
-            # Transmit buffered data to remote socket
-            self._produce()
-        except (Exception, pika.compat.SOCKET_ERROR) as error:  # pylint: disable=W0703
-            if (isinstance(error, pika.compat.SOCKET_ERROR) and
-                    error.errno in _TRY_IO_AGAIN_SOCK_ERROR_CODES):
-                _LOGGER.debug('Send would block on %s', self._sock)
-            else:
-                _LOGGER.exception(
-                    '_AsyncBaseTransport._produce() failed, aborting '
-                    'connection: error=%r; sock=%s; Caller\'s stack:\n%s',
-                    error, self._sock, ''.join(
-                        traceback.format_exception(*sys.exc_info())))
-                self._initiate_abort(error)
-        else:
-            if not self._tx_buffers:
-                self._nbio.remove_writer(self._sock.fileno())
-                _LOGGER.debug('Turned off writability watcher: %s', self._sock)
+        pass
 
 
 class _AsyncSSLTransport(_AsyncTransportBase):
@@ -1178,44 +809,14 @@ class _AsyncSSLTransport(_AsyncTransportBase):
         """Handle readable socket indication
 
         """
-        if self._state != self._STATE_ACTIVE:
-            _LOGGER.debug(
-                'Ignoring readability notification due to inactive '
-                'state: state=%s; %s', self._state, self._sock)
-            return
-
-        if self._ssl_readable_action:
-            try:
-                self._ssl_readable_action()
-            except Exception as error:  # pylint: disable=W0703
-                self._initiate_abort(error)
-        else:
-            _LOGGER.debug(
-                'SSL readable action was suppressed: '
-                'ssl_writable_action=%r; %s', self._ssl_writable_action,
-                self._sock)
+        pass
 
     @_log_exceptions
     def _on_socket_writable(self):
         """Handle writable socket notification
 
         """
-        if self._state != self._STATE_ACTIVE:
-            _LOGGER.debug(
-                'Ignoring writability notification due to inactive '
-                'state: state=%s; %s', self._state, self._sock)
-            return
-
-        if self._ssl_writable_action:
-            try:
-                self._ssl_writable_action()
-            except Exception as error:  # pylint: disable=W0703
-                self._initiate_abort(error)
-        else:
-            _LOGGER.debug(
-                'SSL writable action was suppressed: '
-                'ssl_readable_action=%r; %s', self._ssl_readable_action,
-                self._sock)
+        pass
 
     @_log_exceptions
     def _consume(self):
@@ -1229,66 +830,7 @@ class _AsyncSSLTransport(_AsyncTransportBase):
         :raises Exception: error that signals that connection needs to be
             aborted
         """
-        next_consume_on_readable = True
-
-        try:
-            super()._consume()
-        except ssl.SSLError as error:
-            if error.errno == ssl.SSL_ERROR_WANT_READ:
-                _LOGGER.debug('SSL ingester wants read: %s', self._sock)
-            elif error.errno == ssl.SSL_ERROR_WANT_WRITE:
-                # Looks like SSL re-negotiation
-                _LOGGER.debug('SSL ingester wants write: %s', self._sock)
-                next_consume_on_readable = False
-            else:
-                _LOGGER.exception(
-                    '_AsyncBaseTransport._consume() failed, aborting '
-                    'connection: error=%r; sock=%s; Caller\'s stack:\n%s',
-                    error, self._sock, ''.join(
-                        traceback.format_exception(*sys.exc_info())))
-                raise  # let outer catch block abort the transport
-        else:
-            if self._state != self._STATE_ACTIVE:
-                # Most likely our protocol's `data_received()` aborted the
-                # transport
-                _LOGGER.debug(
-                    'Leaving SSL consumer due to inactive '
-                    'state: state=%s; %s', self._state, self._sock)
-                return
-
-            # Consumer exited without exception; there may still be more,
-            # possibly unprocessed, data records in SSL input buffers that
-            # can be read without waiting for socket to become readable.
-
-            # In case buffered input SSL data records still remain
-            self._nbio.add_callback_threadsafe(self._on_socket_readable)
-
-        # Update consumer registration
-        if next_consume_on_readable:
-            if not self._ssl_readable_action:
-                self._nbio.set_reader(self._sock.fileno(),
-                                      self._on_socket_readable)
-            self._ssl_readable_action = self._consume
-
-            # NOTE: can't use identity check, it fails for instance methods
-            if self._ssl_writable_action == self._consume: # pylint: disable=W0143
-                self._nbio.remove_writer(self._sock.fileno())
-                self._ssl_writable_action = None
-        else:
-            # WANT_WRITE
-            if not self._ssl_writable_action:
-                self._nbio.set_writer(self._sock.fileno(),
-                                      self._on_socket_writable)
-            self._ssl_writable_action = self._consume
-
-            if self._ssl_readable_action:
-                self._nbio.remove_reader(self._sock.fileno())
-                self._ssl_readable_action = None
-
-        # Update producer registration
-        if self._tx_buffers and not self._ssl_writable_action:
-            self._ssl_writable_action = self._produce
-            self._nbio.set_writer(self._sock.fileno(), self._on_socket_writable)
+        pass
 
     @_log_exceptions
     def _produce(self):
@@ -1302,83 +844,4 @@ class _AsyncSSLTransport(_AsyncTransportBase):
             aborted
 
         """
-        next_produce_on_writable = None  # None means no need to produce
-
-        try:
-            super()._produce()
-        except ssl.SSLError as error:
-            if error.errno == ssl.SSL_ERROR_WANT_READ:
-                # Looks like SSL re-negotiation
-                _LOGGER.debug('SSL emitter wants read: %s', self._sock)
-                next_produce_on_writable = False
-            elif error.errno == ssl.SSL_ERROR_WANT_WRITE:
-                _LOGGER.debug('SSL emitter wants write: %s', self._sock)
-                next_produce_on_writable = True
-            else:
-                _LOGGER.exception(
-                    '_AsyncBaseTransport._produce() failed, aborting '
-                    'connection: error=%r; sock=%s; Caller\'s stack:\n%s',
-                    error, self._sock, ''.join(
-                        traceback.format_exception(*sys.exc_info())))
-                raise  # let outer catch block abort the transport
-        else:
-            # No exception, so everything must have been written to the socket
-            assert not self._tx_buffers, (
-                '_AsyncSSLTransport._produce(): no exception from parent '
-                'class, but data remains in _tx_buffers.', len(
-                    self._tx_buffers))
-
-        # Update producer registration
-        if self._tx_buffers:
-            assert next_produce_on_writable is not None, (
-                '_AsyncSSLTransport._produce(): next_produce_on_writable is '
-                'still None', self._state)
-
-            if next_produce_on_writable:
-                if not self._ssl_writable_action:
-                    self._nbio.set_writer(self._sock.fileno(),
-                                          self._on_socket_writable)
-                self._ssl_writable_action = self._produce
-
-                # NOTE: can't use identity check, it fails for instance methods
-                if self._ssl_readable_action == self._produce: # pylint: disable=W0143
-                    self._nbio.remove_reader(self._sock.fileno())
-                    self._ssl_readable_action = None
-            else:
-                # WANT_READ
-                if not self._ssl_readable_action:
-                    self._nbio.set_reader(self._sock.fileno(),
-                                          self._on_socket_readable)
-                self._ssl_readable_action = self._produce
-
-                if self._ssl_writable_action:
-                    self._nbio.remove_writer(self._sock.fileno())
-                    self._ssl_writable_action = None
-        else:
-            # NOTE: can't use identity check, it fails for instance methods
-            if self._ssl_readable_action == self._produce: # pylint: disable=W0143
-                self._nbio.remove_reader(self._sock.fileno())
-                self._ssl_readable_action = None
-                assert self._ssl_writable_action != self._produce, ( # pylint: disable=W0143
-                    '_AsyncSSLTransport._produce(): with empty tx_buffers, '
-                    'writable_action cannot be _produce when readable is '
-                    '_produce', self._state)
-            else:
-                # NOTE: can't use identity check, it fails for instance methods
-                assert self._ssl_writable_action == self._produce, ( # pylint: disable=W0143
-                    '_AsyncSSLTransport._produce(): with empty tx_buffers, '
-                    'expected writable_action as _produce when readable_action '
-                    'is not _produce', 'writable_action:',
-                    self._ssl_writable_action, 'readable_action:',
-                    self._ssl_readable_action, 'state:', self._state)
-                self._ssl_writable_action = None
-                self._nbio.remove_writer(self._sock.fileno())
-
-        # Update consumer registration
-        if not self._ssl_readable_action:
-            self._ssl_readable_action = self._consume
-            self._nbio.set_reader(self._sock.fileno(), self._on_socket_readable)
-            # In case input SSL data records have been buffered
-            self._nbio.add_callback_threadsafe(self._on_socket_readable)
-        elif self._sock.pending():
-            self._nbio.add_callback_threadsafe(self._on_socket_readable)
+        pass

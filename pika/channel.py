@@ -128,8 +128,7 @@ class Channel:
             broker
 
         """
-        self.callbacks.add(self.channel_number, spec.Basic.Cancel, callback,
-                           False)
+        pass
 
     def add_on_close_callback(self, callback):
         """Pass a callback function that will be called when the channel is
@@ -152,8 +151,7 @@ class Channel:
             callback(Channel, Exception reason)
 
         """
-        self.callbacks.add(self.channel_number, '_on_channel_close', callback,
-                           False, self)
+        pass
 
     def add_on_flow_callback(self, callback):
         """Pass a callback function that will be called when Channel.Flow is
@@ -163,9 +161,7 @@ class Channel:
         :param callable callback: The callback function
 
         """
-        self._has_on_flow_callback = True
-        self.callbacks.add(self.channel_number, spec.Channel.Flow, callback,
-                           False)
+        pass
 
     def add_on_return_callback(self, callback):
         """Pass a callback function that will be called when basic_publish is
@@ -180,7 +176,7 @@ class Channel:
                                 - body: bytes
 
         """
-        self.callbacks.add(self.channel_number, '_on_return', callback, False)
+        pass
 
     def basic_ack(self, delivery_tag=0, multiple=False):
         """Acknowledge one or more messages. When sent by the client, this
@@ -200,8 +196,7 @@ class Channel:
                               acknowledgement of all outstanding messages.
 
         """
-        self._raise_if_not_open()
-        return self._send_method(spec.Basic.Ack(delivery_tag, multiple))
+        pass
 
     def basic_cancel(self, consumer_tag='', callback=None):
         """This method cancels a consumer. This does not affect already
@@ -302,36 +297,7 @@ class Channel:
         :raises ValueError:
 
         """
-        validators.require_string(queue, 'queue')
-        validators.require_callback(on_message_callback)
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-
-        # If a consumer tag was not passed, create one
-        if not consumer_tag:
-            consumer_tag = self._generate_consumer_tag()
-
-        if consumer_tag in self._consumers or consumer_tag in self._cancelled:
-            raise exceptions.DuplicateConsumerTag(consumer_tag)
-
-        if auto_ack:
-            self._consumers_with_noack.add(consumer_tag)
-
-        self._consumers[consumer_tag] = on_message_callback
-
-        rpc_callback = self._on_eventok if callback is None else callback
-
-        self._rpc(
-            spec.Basic.Consume(queue=queue,
-                               consumer_tag=consumer_tag,
-                               no_ack=auto_ack,
-                               exclusive=exclusive,
-                               arguments=arguments or dict()), rpc_callback,
-            [(spec.Basic.ConsumeOk, {
-                'consumer_tag': consumer_tag
-            })])
-
-        return consumer_tag
+        pass
 
     def _generate_consumer_tag(self):
         """Generate a consumer tag
@@ -342,7 +308,7 @@ class Channel:
         :rtype: str
 
         """
-        return 'ctag%i.%s' % (self.channel_number, uuid.uuid4().hex)
+        pass
 
     def basic_get(self, queue, callback, auto_ack=False):
         """Get a single message from the AMQP broker. If you want to
@@ -367,17 +333,7 @@ class Channel:
         :raises ValueError:
 
         """
-        validators.require_string(queue, 'queue')
-        validators.require_callback(callback)
-        if self._on_getok_callback is not None:
-            raise exceptions.DuplicateGetOkCallback()
-        self._on_getok_callback = callback
-
-        # pylint: disable=W0511
-        # TODO Strangely, not using _rpc for the synchronous Basic.Get. Would
-        # need to extend _rpc to handle Basic.GetOk method, header, and body
-        # frames (or similar)
-        self._send_method(spec.Basic.Get(queue=queue, no_ack=auto_ack))
+        pass
 
     def basic_nack(self, delivery_tag=0, multiple=False, requeue=True):
         """This method allows a client to reject one or more incoming messages.
@@ -398,9 +354,7 @@ class Channel:
                              dead-lettered.
 
         """
-        self._raise_if_not_open()
-        return self._send_method(
-            spec.Basic.Nack(delivery_tag, multiple, requeue))
+        pass
 
     def basic_publish(self,
                       exchange,
@@ -420,13 +374,7 @@ class Channel:
         :param bool mandatory: The mandatory flag
 
         """
-        self._raise_if_not_open()
-        body = as_bytes(body)
-        properties = properties or spec.BasicProperties()
-        self._send_method(
-            spec.Basic.Publish(exchange=exchange,
-                               routing_key=routing_key,
-                               mandatory=mandatory), (properties, body))
+        pass
 
     def basic_qos(self,
                   prefetch_size=0,
@@ -464,13 +412,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        validators.zero_or_greater('prefetch_size', prefetch_size)
-        validators.zero_or_greater('prefetch_count', prefetch_count)
-        return self._rpc(
-            spec.Basic.Qos(prefetch_size, prefetch_count, global_qos), callback,
-            [spec.Basic.QosOk])
+        pass
 
     def basic_reject(self, delivery_tag=0, requeue=True):
         """Reject an incoming message. This method allows a client to reject a
@@ -506,10 +448,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        return self._rpc(spec.Basic.Recover(requeue), callback,
-                         [spec.Basic.RecoverOk])
+        pass
 
     def close(self, reply_code=0, reply_text="Normal shutdown"):
         """Invoke a graceful shutdown of the channel with the AMQP Broker.
@@ -568,28 +507,7 @@ class Channel:
         :raises ValueError:
 
         """
-        if not callable(ack_nack_callback):
-            # confirm_deliver requires a callback; it's meaningless
-            # without a user callback to receieve Basic.Ack/Basic.Nack notifications
-            raise ValueError('confirm_delivery requires a callback '
-                             'to receieve Basic.Ack/Basic.Nack notifications')
-
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-
-        if not (self.connection.publisher_confirms and
-                self.connection.basic_nack):
-            raise exceptions.MethodNotImplemented(
-                'Confirm.Select not Supported by Server')
-
-        # Add the ack and nack callback
-        self.callbacks.add(self.channel_number, spec.Basic.Ack,
-                           ack_nack_callback, False)
-        self.callbacks.add(self.channel_number, spec.Basic.Nack,
-                           ack_nack_callback, False)
-
-        self._rpc(spec.Confirm.Select(nowait), callback,
-                  [spec.Confirm.SelectOk] if not nowait else [])
+        pass
 
     @property
     def consumer_tags(self):
@@ -598,7 +516,7 @@ class Channel:
         :rtype: list
 
         """
-        return list(self._consumers.keys())
+        pass
 
     def exchange_bind(self,
                       destination,
@@ -616,14 +534,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.require_string(destination, 'destination')
-        validators.require_string(source, 'source')
-        nowait = validators.rpc_completion_callback(callback)
-        return self._rpc(
-            spec.Exchange.Bind(0, destination, source, routing_key, nowait,
-                               arguments or dict()), callback,
-            [spec.Exchange.BindOk] if not nowait else [])
+        pass
 
     def exchange_declare(self,
                          exchange,
@@ -656,16 +567,7 @@ class Channel:
         :raises ValueError:
 
         """
-        validators.require_string(exchange, 'exchange')
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-        if isinstance(exchange_type, Enum):
-            exchange_type = exchange_type.value
-        return self._rpc(
-            spec.Exchange.Declare(0, exchange, exchange_type, passive, durable,
-                                  auto_delete, internal, nowait, arguments or
-                                  dict()), callback,
-            [spec.Exchange.DeclareOk] if not nowait else [])
+        pass
 
     def exchange_delete(self, exchange=None, if_unused=False, callback=None):
         """Delete the exchange.
@@ -676,11 +578,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-        return self._rpc(spec.Exchange.Delete(0, exchange, if_unused,
-                                              nowait), callback,
-                         [spec.Exchange.DeleteOk] if not nowait else [])
+        pass
 
     def exchange_unbind(self,
                         destination=None,
@@ -698,12 +596,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-        return self._rpc(
-            spec.Exchange.Unbind(0, destination, source, routing_key, nowait,
-                                 arguments), callback,
-            [spec.Exchange.UnbindOk] if not nowait else [])
+        pass
 
     def flow(self, active, callback=None):
         """Turn Channel flow control off and on. Pass a callback to be notified
@@ -718,11 +611,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        self._on_flowok_callback = callback
-        self._rpc(spec.Channel.Flow(active), self._on_flowok,
-                  [spec.Channel.FlowOk])
+        pass
 
     @property
     def is_closed(self):
@@ -731,7 +620,7 @@ class Channel:
         :rtype: bool
 
         """
-        return self._state == self.CLOSED
+        pass
 
     @property
     def is_closing(self):
@@ -741,7 +630,7 @@ class Channel:
         :rtype: bool
 
         """
-        return self._state == self.CLOSING
+        pass
 
     @property
     def is_open(self):
@@ -750,7 +639,7 @@ class Channel:
         :rtype: bool
 
         """
-        return self._state == self.OPEN
+        pass
 
     @property
     def is_opening(self):
@@ -759,13 +648,11 @@ class Channel:
         :rtype: bool
 
         """
-        return self._state == self.OPENING
+        pass
 
     def open(self):
         """Open the channel"""
-        self._set_state(self.OPENING)
-        self._add_callbacks()
-        self._rpc(spec.Channel.Open(), self._on_openok, [spec.Channel.OpenOk])
+        pass
 
     def queue_bind(self,
                    queue,
@@ -783,16 +670,7 @@ class Channel:
         :raises ValueError:
 
         """
-        validators.require_string(queue, 'queue')
-        validators.require_string(exchange, 'exchange')
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-        if routing_key is None:
-            routing_key = queue
-        return self._rpc(
-            spec.Queue.Bind(0, queue, exchange, routing_key, nowait,
-                            arguments or dict()), callback,
-            [spec.Queue.BindOk] if not nowait else [])
+        pass
 
     def queue_declare(self,
                       queue,
@@ -821,20 +699,7 @@ class Channel:
         :raises ValueError:
 
         """
-        validators.require_string(queue, 'queue')
-        self._raise_if_not_open()
-        nowait = validators.rpc_completion_callback(callback)
-
-        if queue:
-            condition = (spec.Queue.DeclareOk, {'queue': queue})
-        else:
-            condition = spec.Queue.DeclareOk
-        replies = [condition] if not nowait else []
-
-        return self._rpc(
-            spec.Queue.Declare(0, queue, passive, durable, exclusive,
-                               auto_delete, nowait, arguments or dict()),
-            callback, replies)
+        pass
 
     def queue_delete(self,
                      queue,
@@ -850,13 +715,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.require_string(queue, 'queue')
-        nowait = validators.rpc_completion_callback(callback)
-        replies = [spec.Queue.DeleteOk] if not nowait else []
-        return self._rpc(
-            spec.Queue.Delete(0, queue, if_unused, if_empty, nowait), callback,
-            replies)
+        pass
 
     def queue_purge(self, queue, callback=None):
         """Purge all of the messages from the specified queue
@@ -866,11 +725,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.require_string(queue, 'queue')
-        nowait = validators.rpc_completion_callback(callback)
-        replies = [spec.Queue.PurgeOk] if not nowait else []
-        return self._rpc(spec.Queue.Purge(0, queue, nowait), callback, replies)
+        pass
 
     def queue_unbind(self,
                      queue,
@@ -888,14 +743,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.require_string(queue, 'queue')
-        validators.rpc_completion_callback(callback)
-        if routing_key is None:
-            routing_key = queue
-        return self._rpc(
-            spec.Queue.Unbind(0, queue, exchange, routing_key, arguments or
-                              dict()), callback, [spec.Queue.UnbindOk])
+        pass
 
     def tx_commit(self, callback=None):
         """Commit a transaction
@@ -904,9 +752,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        return self._rpc(spec.Tx.Commit(), callback, [spec.Tx.CommitOk])
+        pass
 
     def tx_rollback(self, callback=None):
         """Rollback a transaction.
@@ -915,9 +761,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        return self._rpc(spec.Tx.Rollback(), callback, [spec.Tx.RollbackOk])
+        pass
 
     def tx_select(self, callback=None):
         """Select standard transaction mode. This method sets the channel to use
@@ -928,9 +772,7 @@ class Channel:
         :raises ValueError:
 
         """
-        self._raise_if_not_open()
-        validators.rpc_completion_callback(callback)
-        return self._rpc(spec.Tx.Select(), callback, [spec.Tx.SelectOk])
+        pass
 
     # Internal methods
 
@@ -939,21 +781,7 @@ class Channel:
         connecting and connected to a server.
 
         """
-        # Add a callback for Basic.GetEmpty
-        self.callbacks.add(self.channel_number, spec.Basic.GetEmpty,
-                           self._on_getempty, False)
-
-        # Add a callback for Basic.Cancel
-        self.callbacks.add(self.channel_number, spec.Basic.Cancel,
-                           self._on_cancel, False)
-
-        # Deprecated in newer versions of RabbitMQ but still register for it
-        self.callbacks.add(self.channel_number, spec.Channel.Flow,
-                           self._on_flow, False)
-
-        # Add a callback for when the server closes our channel
-        self.callbacks.add(self.channel_number, spec.Channel.Close,
-                           self._on_close_from_broker, True)
+        pass
 
     def _add_on_cleanup_callback(self, callback):
         """For internal use only (e.g., Connection needs to remove closed
@@ -986,9 +814,7 @@ class Channel:
         :param str consumer_tag: The consumer tag to cleanup
 
         """
-        self._consumers_with_noack.discard(consumer_tag)
-        self._consumers.pop(consumer_tag, None)
-        self._cancelled.discard(consumer_tag)
+        pass
 
     def _get_cookie(self):
         """Used by the wrapper implementation (e.g., `BlockingChannel`) to
@@ -1012,19 +838,7 @@ class Channel:
         :param pika.amqp_object.Frame frame_value: The frame to deliver
 
         """
-        try:
-            response = self._content_assembler.process(frame_value)
-        except exceptions.UnexpectedFrameError:
-            self._on_unexpected_frame(frame_value)
-            return
-
-        if response:
-            if isinstance(response[0].method, spec.Basic.Deliver):
-                self._on_deliver(*response)
-            elif isinstance(response[0].method, spec.Basic.GetOk):
-                self._on_getok(*response)
-            elif isinstance(response[0].method, spec.Basic.Return):
-                self._on_return(*response)
+        pass
 
     def _on_cancel(self, method_frame):
         """When the broker cancels a consumer, delete it from our internal
@@ -1033,11 +847,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        if method_frame.method.consumer_tag in self._cancelled:
-            # User-initiated cancel is waiting for Cancel-ok
-            return
-
-        self._cleanup_consumer_ref(method_frame.method.consumer_tag)
+        pass
 
     def _on_cancelok(self, method_frame):
         """Called in response to a frame from the Broker when the
@@ -1046,7 +856,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        self._cleanup_consumer_ref(method_frame.method.consumer_tag)
+        pass
 
     def _transition_to_closed(self):
         """Common logic for transitioning the channel to the CLOSED state:
@@ -1058,16 +868,7 @@ class Channel:
         `self._closing_reason` has been set up
 
         """
-        assert not self.is_closed
-        assert self._closing_reason is not None
-
-        self._set_state(self.CLOSED)
-
-        try:
-            self.callbacks.process(self.channel_number, '_on_channel_close',
-                                   self, self, self._closing_reason)
-        finally:
-            self._cleanup()
+        pass
 
     def _on_close_from_broker(self, method_frame):
         """Handle `Channel.Close` from broker.
@@ -1076,35 +877,7 @@ class Channel:
             method
 
         """
-        LOGGER.warning('Received remote Channel.Close (%s): %r on %s',
-                       method_frame.method.reply_code,
-                       method_frame.method.reply_text, self)
-        # Note, we should not be called when channel is already closed
-        assert not self.is_closed
-
-        # AMQP 0.9.1 requires CloseOk response to Channel.Close;
-        self._send_method(spec.Channel.CloseOk())
-
-        # Save the details, possibly overriding user-provided values if
-        # user-initiated close is pending (in which case they will be provided
-        # to user callback when CloseOk arrives).
-        self._closing_reason = exceptions.ChannelClosedByBroker(
-            method_frame.method.reply_code, method_frame.method.reply_text)
-
-        if self.is_closing:
-            # Since we may have already put Channel.Close on the wire, we need
-            # to wait for CloseOk before cleaning up to avoid a race condition
-            # whereby our channel number might get reused before our CloseOk
-            # arrives
-            #
-            # NOTE: if our Channel.Close destined for the broker was blocked by
-            # an earlier synchronous method, this call will drop it and perform
-            # a meta-close (see `_on_close_meta()` which fakes receipt of
-            # `Channel.CloseOk` and dispatches the `'_on_channel_close'`
-            # callbacks.
-            self._drain_blocked_methods_on_remote_close()
-        else:
-            self._transition_to_closed()
+        pass
 
     def _on_close_meta(self, reason):
         """Handle meta-close request from either a remote Channel.Close from
@@ -1116,11 +889,7 @@ class Channel:
         :param Exception reason: Exception describing the reason for closing.
 
         """
-        LOGGER.debug('Handling meta-close on %s: %r', self, reason)
-
-        if not self.is_closed:
-            self._closing_reason = reason
-            self._transition_to_closed()
+        pass
 
     def _on_closeok(self, method_frame):
         """Invoked when RabbitMQ replies to a Channel.Close method
@@ -1129,9 +898,7 @@ class Channel:
             method
 
         """
-        LOGGER.info('Received %s on %s', method_frame.method, self)
-
-        self._transition_to_closed()
+        pass
 
     def _on_deliver(self, method_frame, header_frame, body):
         """Cope with reentrancy. If a particular consumer is still active when
@@ -1143,19 +910,7 @@ class Channel:
         :param bytes body: The body received
 
         """
-        consumer_tag = method_frame.method.consumer_tag
-
-        if consumer_tag in self._cancelled:
-            if self.is_open and consumer_tag not in self._consumers_with_noack:
-                self.basic_reject(method_frame.method.delivery_tag)
-            return
-
-        if consumer_tag not in self._consumers:
-            LOGGER.error('Unexpected delivery: %r', method_frame)
-            return
-
-        self._consumers[consumer_tag](self, method_frame.method,
-                                      header_frame.properties, body)
+        pass
 
     def _on_eventok(self, method_frame):
         """Generic events that returned ok that may have internal callbacks.
@@ -1165,7 +920,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        LOGGER.debug('Discarding frame %r', method_frame)
+        pass
 
     def _on_flow(self, _method_frame_unused):
         """Called if the server sends a Channel.Flow frame.
@@ -1173,8 +928,7 @@ class Channel:
         :param pika.frame.Method method_frame_unused: The Channel.Flow frame
 
         """
-        if self._has_on_flow_callback is False:
-            LOGGER.warning('Channel.Flow received from server')
+        pass
 
     def _on_flowok(self, method_frame):
         """Called in response to us asking the server to toggle on Channel.Flow
@@ -1182,12 +936,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        self.flow_active = method_frame.method.active
-        if self._on_flowok_callback:
-            self._on_flowok_callback(method_frame.method.active)
-            self._on_flowok_callback = None
-        else:
-            LOGGER.warning('Channel.FlowOk received with no active callbacks')
+        pass
 
     def _on_getempty(self, method_frame):
         """When we receive an empty reply do nothing but log it
@@ -1195,9 +944,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        LOGGER.debug('Received Basic.GetEmpty: %r', method_frame)
-        if self._on_getok_callback is not None:
-            self._on_getok_callback = None
+        pass
 
     def _on_getok(self, method_frame, header_frame, body):
         """Called in reply to a Basic.Get when there is a message.
@@ -1207,12 +954,7 @@ class Channel:
         :param bytes body: The body received
 
         """
-        if self._on_getok_callback is not None:
-            callback = self._on_getok_callback
-            self._on_getok_callback = None
-            callback(self, method_frame.method, header_frame.properties, body)
-        else:
-            LOGGER.error('Basic.GetOk received with no active callback')
+        pass
 
     def _on_openok(self, method_frame):
         """Called by our callback handler when we receive a Channel.OpenOk and
@@ -1227,14 +969,7 @@ class Channel:
         :param pika.frame.Method method_frame: Channel.OpenOk frame
 
         """
-        # Suppress OpenOk if the user or Connection.Close started closing it
-        # before open completed.
-        if self.is_closing:
-            LOGGER.debug('Suppressing while in closing state: %s', method_frame)
-        else:
-            self._set_state(self.OPEN)
-            if self._on_openok_callback is not None:
-                self._on_openok_callback(self)
+        pass
 
     def _on_return(self, method_frame, header_frame, body):
         """Called if the server sends a Basic.Return frame.
@@ -1244,11 +979,7 @@ class Channel:
         :param bytes body: The message body
 
         """
-        if not self.callbacks.process(self.channel_number, '_on_return', self,
-                                      self, method_frame.method,
-                                      header_frame.properties, body):
-            LOGGER.debug('Basic.Return received from server (%r, %r)',
-                          method_frame.method, header_frame.properties)
+        pass
 
     def _on_selectok(self, method_frame):
         """Called when the broker sends a Confirm.SelectOk frame
@@ -1256,7 +987,7 @@ class Channel:
         :param pika.frame.Method method_frame: The method frame received
 
         """
-        LOGGER.debug("Confirm.SelectOk Received: %r", method_frame)
+        pass
 
     def _on_synchronous_complete(self, _method_frame_unused):
         """This is called when a synchronous command is completed. It will undo
@@ -1266,13 +997,7 @@ class Channel:
         :param pika.frame.Method method_frame_unused: The method frame received
 
         """
-        LOGGER.debug('%i blocked frames', len(self._blocked))
-        self._blocking = None
-        # self._blocking must be checked here as a callback could
-        # potentially change the state of that variable during an
-        # iteration of the while loop
-        while self._blocked and self._blocking is None:
-            self._rpc(*self._blocked.popleft())
+        pass
 
     def _drain_blocked_methods_on_remote_close(self):
         """This is called when the broker sends a Channel.Close while the
@@ -1291,16 +1016,7 @@ class Channel:
         sent, and thus its completion callback would never be called.
 
         """
-        LOGGER.debug(
-            'Draining %i blocked frames due to broker-requested Channel.Close',
-            len(self._blocked))
-        while self._blocked:
-            method = self._blocked.popleft()[0]
-            if isinstance(method, spec.Channel.Close):
-                # The desired reason is already in self._closing_reason
-                self._on_close_meta(self._closing_reason)
-            else:
-                LOGGER.debug('Ignoring drained blocked method: %s', method)
+        pass
 
     def _rpc(self, method, callback=None, acceptable_replies=None):
         """Make a synchronous channel RPC call for a synchronous method frame. If
@@ -1436,7 +1152,7 @@ class Channel:
         :param pika.frame.Frame frame_value: The frame received
 
         """
-        LOGGER.error('Unexpected frame: %r', frame_value)
+        pass
 
 
 class ContentFrameAssembler:

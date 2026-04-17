@@ -43,15 +43,7 @@ def encode_short_string(pieces, value):
 def decode_short_string(encoded, offset):
     """Decode a short string value from ``encoded`` data at ``offset``.
     """
-    length = struct.unpack_from('B', encoded, offset)[0]
-    offset += 1
-    value = encoded[offset:offset + length]
-    try:
-        value = value.decode('utf8')
-    except UnicodeDecodeError:
-        pass
-    offset += length
-    return value, offset
+    pass
 
 
 def encode_table(pieces, table):
@@ -156,15 +148,7 @@ def decode_table(encoded, offset):
     :rtype: tuple
 
     """
-    result = {}
-    tablesize = struct.unpack_from('>I', encoded, offset)[0]
-    offset += 4
-    limit = offset + tablesize
-    while offset < limit:
-        key, offset = decode_short_string(encoded, offset)
-        value, offset = decode_value(encoded, offset)
-        result[key] = value
-    return result, offset
+    pass
 
 
 def decode_value(encoded, offset): # pylint: disable=R0912,R0915
@@ -177,121 +161,4 @@ def decode_value(encoded, offset): # pylint: disable=R0912,R0915
     :raises: pika.exceptions.InvalidFieldTypeException
 
     """
-    # Slice to get bytes
-    kind = encoded[offset:offset + 1]
-    offset += 1
-
-    # Bool
-    if kind == b't':
-        value = struct.unpack_from('>B', encoded, offset)[0]
-        value = bool(value)
-        offset += 1
-
-    # Short-Short Int
-    elif kind == b'b':
-        value = struct.unpack_from('>B', encoded, offset)[0]
-        offset += 1
-
-    # Short-Short Unsigned Int
-    elif kind == b'B':
-        value = struct.unpack_from('>b', encoded, offset)[0]
-        offset += 1
-
-    # Short Int
-    elif kind == b'U':
-        value = struct.unpack_from('>h', encoded, offset)[0]
-        offset += 2
-
-    # Short Unsigned Int
-    elif kind == b'u':
-        value = struct.unpack_from('>H', encoded, offset)[0]
-        offset += 2
-
-    # Long Int
-    elif kind == b'I':
-        value = struct.unpack_from('>i', encoded, offset)[0]
-        offset += 4
-
-    # Long Unsigned Int
-    elif kind == b'i':
-        value = struct.unpack_from('>I', encoded, offset)[0]
-        offset += 4
-
-    # Long-Long Int
-    elif kind == b'L':
-        value = long(struct.unpack_from('>q', encoded, offset)[0])
-        offset += 8
-
-    # Long-Long Unsigned Int
-    elif kind == b'l':
-        value = long(struct.unpack_from('>Q', encoded, offset)[0])
-        offset += 8
-
-    # Float
-    elif kind == b'f':
-        value = long(struct.unpack_from('>f', encoded, offset)[0])
-        offset += 4
-
-    # Double
-    elif kind == b'd':
-        value = long(struct.unpack_from('>d', encoded, offset)[0])
-        offset += 8
-
-    # Decimal
-    elif kind == b'D':
-        decimals = struct.unpack_from('B', encoded, offset)[0]
-        offset += 1
-        raw = struct.unpack_from('>i', encoded, offset)[0]
-        offset += 4
-        value = decimal.Decimal(raw) * (decimal.Decimal(10)**-decimals)
-
-    # https://github.com/pika/pika/issues/1205
-    # Short Signed Int
-    elif kind == b's':
-        value = struct.unpack_from('>h', encoded, offset)[0]
-        offset += 2
-
-    # Long String
-    elif kind == b'S':
-        length = struct.unpack_from('>I', encoded, offset)[0]
-        offset += 4
-        value = encoded[offset:offset + length]
-        try:
-            value = value.decode('utf8')
-        except UnicodeDecodeError:
-            pass
-        offset += length
-
-    elif kind == b'x':
-        length = struct.unpack_from('>I', encoded, offset)[0]
-        offset += 4
-        value = encoded[offset:offset + length]
-        offset += length
-
-    # Field Array
-    elif kind == b'A':
-        length = struct.unpack_from('>I', encoded, offset)[0]
-        offset += 4
-        offset_end = offset + length
-        value = []
-        while offset < offset_end:
-            val, offset = decode_value(encoded, offset)
-            value.append(val)
-
-    # Timestamp
-    elif kind == b'T':
-        value = datetime.fromtimestamp(
-            struct.unpack_from('>Q', encoded, offset)[0], timezone.utc)
-        offset += 8
-
-    # Field Table
-    elif kind == b'F':
-        (value, offset) = decode_table(encoded, offset)
-
-    # Null / Void
-    elif kind == b'V':
-        value = None
-    else:
-        raise exceptions.InvalidFieldTypeException(kind)
-
-    return value, offset
+    pass

@@ -94,26 +94,7 @@ class GeventConnection(BaseConnection):
         """Implement
         :py:classmethod::`pika.adapters.BaseConnection.create_connection()`.
         """
-        custom_ioloop = (custom_ioloop or
-                         _GeventSelectorIOLoop(gevent.get_hub()))
-
-        nbio = _GeventSelectorIOServicesAdapter(custom_ioloop)
-
-        def connection_factory(params):
-            """Connection factory."""
-            if params is None:
-                raise ValueError('Expected pika.connection.Parameters '
-                                 'instance, but got None in params arg.')
-            return cls(parameters=params,
-                       custom_ioloop=nbio,
-                       internal_connection_workflow=False)
-
-        return cls._start_connection_workflow(
-            connection_configs=connection_configs,
-            connection_factory=connection_factory,
-            nbio=nbio,
-            workflow=workflow,
-            on_done=on_done)
+        pass
 
 
 class _TSafeCallbackQueue:
@@ -136,7 +117,7 @@ class _TSafeCallbackQueue:
     @property
     def fd(self):
         """The file-descriptor to register for READ events in the IO loop."""
-        return self._read_fd
+        pass
 
     def add_callback_threadsafe(self, callback):
         """Add an item to the queue from any thread. The configured handler
@@ -158,15 +139,7 @@ class _TSafeCallbackQueue:
         Performs a blocking READ on the pipe so must only be called when the
         pipe is ready for reading.
         """
-        try:
-            callback = self._queue.get_nowait()
-        except queue.Empty:
-            # Should never happen.
-            LOGGER.warning("Callback queue was empty.")
-        else:
-            # Read the byte from the pipe so the event doesn't re-fire.
-            os.read(self._read_fd, 1)
-            callback()
+        pass
 
 
 class _GeventSelectorIOLoop(AbstractSelectorIOLoop):
@@ -195,9 +168,7 @@ class _GeventSelectorIOLoop(AbstractSelectorIOLoop):
 
         def run_callback_in_main_thread(fd, events):
             """Swallow the fd and events arguments."""
-            del fd
-            del events
-            self._callback_queue.run_next_callback()
+            pass
 
         self.add_handler(self._callback_queue.fd, run_callback_in_main_thread,
                          self.READ)
@@ -442,28 +413,11 @@ class _GeventAddressResolver:
         """Call `getaddrinfo()` and return result via user's callback
         function on the configured IO loop.
         """
-        try:
-            # NOTE(JG): Can't use kwargs with getaddrinfo on Python <= v2.7.
-            result = gevent.socket.getaddrinfo(self._ga_host, self._ga_port,
-                                               self._ga_family,
-                                               self._ga_socktype,
-                                               self._ga_proto, self._ga_flags)
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.error('Address resolution failed: %r', exc)
-            result = exc
-
-        callback = functools.partial(self._dispatch_callback, result)
-        self._loop.add_callback(callback)
+        pass
 
     def _dispatch_callback(self, result):
         """Invoke the configured completion callback and any subsequent cleanup.
 
         :param result: result from getaddrinfo, or the exception if raised.
         """
-        try:
-            LOGGER.debug(
-                'Invoking async getaddrinfo() completion callback; host=%r',
-                self._ga_host)
-            self._on_done(result)
-        finally:
-            self._cleanup()
+        pass

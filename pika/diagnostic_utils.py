@@ -36,27 +36,6 @@ def create_log_exception_decorator(logger):
         :returns: the function wrapper
         :rtype: callable
         """
-
-        @functools.wraps(func)
-        def log_exception_func_wrap(*args, **kwargs):
-            """The wrapper function returned by the decorator. Invokes the
-            function with the given args/kwargs and returns the function's
-            return value. If the function exits with an exception, logs the
-            exception traceback and re-raises the
-
-            :param args: positional args passed to wrapped function
-            :param kwargs: keyword args passed to wrapped function
-            :returns: whatever the wrapped function returns
-            :rtype: object
-            """
-            try:
-                return func(*args, **kwargs)
-            except:
-                logger.exception(
-                    'Wrapped func exited with exception. Caller\'s stack:\n%s',
-                    ''.join(traceback.format_exception(*sys.exc_info())))
-                raise
-
-        return log_exception_func_wrap
+        pass
 
     return log_exception

@@ -72,11 +72,7 @@ class BaseConnection(connection.Connection):
         be wiped.
 
         """
-        super()._init_connection_state()
-
-        self._connection_workflow = None
-        self._transport = None
-        self._got_eof = False
+        pass
 
     def __repr__(self):
 
@@ -163,28 +159,7 @@ class BaseConnection(connection.Connection):
         :rtype: connection_workflow.AbstractAMQPConnectionWorkflow
 
         """
-        if workflow is None:
-            workflow = connection_workflow.AMQPConnectionWorkflow()
-            LOGGER.debug('Created default connection workflow %r', workflow)
-
-        if isinstance(workflow, connection_workflow.AMQPConnectionWorkflow):
-            workflow.set_io_services(nbio)
-
-        def create_connector():
-            """`AMQPConnector` factory."""
-            return connection_workflow.AMQPConnector(
-                lambda params: _StreamingProtocolShim(
-                    connection_factory(params)),
-                nbio)
-
-        workflow.start(
-            connection_configs=connection_configs,
-            connector_factory=create_connector,
-            native_loop=nbio.get_native_ioloop(),
-            on_done=functools.partial(cls._unshim_connection_workflow_callback,
-                                      on_done))
-
-        return workflow
+        pass
 
     @property
     def ioloop(self):
@@ -231,22 +206,7 @@ class BaseConnection(connection.Connection):
         the stack will be up already, so there is no corresponding callback.
 
         """
-        self._connection_workflow = connection_workflow.AMQPConnectionWorkflow(
-            _until_first_amqp_attempt=True)
-
-        self._connection_workflow.set_io_services(self._nbio)
-
-        def create_connector():
-            """`AMQPConnector` factory"""
-            return connection_workflow.AMQPConnector(
-                lambda _params: _StreamingProtocolShim(self), self._nbio)
-
-        self._connection_workflow.start(
-            [self.params],
-            connector_factory=create_connector,
-            native_loop=self._nbio.get_native_ioloop(),
-            on_done=functools.partial(self._unshim_connection_workflow_callback,
-                                      self._on_connection_workflow_done))
+        pass
 
     @staticmethod
     def _unshim_connection_workflow_callback(user_on_done, shim_or_exc):
@@ -256,11 +216,7 @@ class BaseConnection(connection.Connection):
             :py:meth:`connection_workflow.AbstractAMQPConnectionWorkflow.start()`.
         :param _StreamingProtocolShim | Exception shim_or_exc:
         """
-        result = shim_or_exc
-        if isinstance(result, _StreamingProtocolShim):
-            result = result.conn
-
-        user_on_done(result)
+        pass
 
     def _abort_connection_workflow(self):
         """Asynchronously abort connection workflow. Upon
@@ -308,39 +264,7 @@ class BaseConnection(connection.Connection):
             `AbstractAMQPConnectionWorkflow.start()` for details.
 
         """
-        LOGGER.debug('Full-stack connection workflow completed: %r',
-                     conn_or_exc)
-
-        self._connection_workflow = None
-
-        # Notify protocol of failure
-        if isinstance(conn_or_exc, Exception):
-            self._transport = None
-            if isinstance(conn_or_exc,
-                          connection_workflow.AMQPConnectionWorkflowAborted):
-                LOGGER.info('Full-stack connection workflow aborted: %r',
-                            conn_or_exc)
-                # So that _handle_connection_workflow_failure() will know it's
-                # not a failure
-                conn_or_exc = None
-            else:
-                LOGGER.error('Full-stack connection workflow failed: %r',
-                             conn_or_exc)
-                if (isinstance(conn_or_exc,
-                               connection_workflow.AMQPConnectionWorkflowFailed)
-                        and isinstance(
-                            conn_or_exc.exceptions[-1], connection_workflow.
-                            AMQPConnectorSocketConnectError)):
-                    conn_or_exc = pika.exceptions.AMQPConnectionError(
-                        conn_or_exc)
-
-            self._handle_connection_workflow_failure(conn_or_exc)
-        else:
-            # NOTE: On success, the stack will be up already, so there is no
-            #       corresponding callback.
-            assert conn_or_exc is self, \
-                'Expected self conn={!r} from workflow, but got {!r}.'.format(
-                    self, conn_or_exc)
+        pass
 
     def _handle_connection_workflow_failure(self, error):
         """Handle failure of self-initiated stack bring-up and call
@@ -351,18 +275,7 @@ class BaseConnection(connection.Connection):
         :param Exception | None error: exception instance describing the reason
             for failure or None if the connection workflow was aborted.
         """
-        if error is None:
-            LOGGER.info('Self-initiated stack bring-up aborted.')
-        else:
-            LOGGER.error('Self-initiated stack bring-up failed: %r', error)
-
-        if not self.is_closed:
-            self._on_stream_terminated(error)
-        else:
-            # This may happen when AMQP layer bring up was started but did not
-            # complete
-            LOGGER.debug('_handle_connection_workflow_failure(): '
-                         'suppressing - connection already closed.')
+        pass
 
     def _adapter_disconnect_stream(self):
         """Asynchronously bring down the streaming transport layer and invoke
@@ -394,10 +307,7 @@ class BaseConnection(connection.Connection):
         :raises Exception: Exception-based exception on error
 
         """
-        self._transport = transport
-
-        # Let connection know that stream is available
-        self._on_stream_connected()
+        pass
 
     def _proto_connection_lost(self, error):
         """Called upon loss or closing of TCP connection.
@@ -414,21 +324,7 @@ class BaseConnection(connection.Connection):
         :raises Exception: Exception-based exception on error
 
         """
-        self._transport = None
-
-        if error is None:
-            # Either result of `eof_received()` or abort
-            if self._got_eof:
-                error = pika.exceptions.StreamLostError(
-                    'Transport indicated EOF')
-        else:
-            error = pika.exceptions.StreamLostError(
-                f'Stream connection lost: {error!r}')
-
-        LOGGER.log(logging.DEBUG if error is None else logging.ERROR,
-                   'connection_lost: %r', error)
-
-        self._on_stream_terminated(error)
+        pass
 
     def _proto_eof_received(self):  # pylint: disable=R0201
         """Called after the remote peer shuts its write end of the connection.
@@ -442,16 +338,7 @@ class BaseConnection(connection.Connection):
         :raises Exception: Exception-based exception on error
 
         """
-        LOGGER.error('Transport indicated EOF.')
-
-        self._got_eof = True
-
-        # This is how a reset connection will typically present itself
-        # when we have nothing to send to the server over plaintext stream.
-        #
-        # Have transport tear down the connection and invoke our
-        # `connection_lost` method
-        return False
+        pass
 
     def _proto_data_received(self, data):
         """Called to deliver incoming data from the server to the protocol.
@@ -462,7 +349,7 @@ class BaseConnection(connection.Connection):
         :raises Exception: Exception-based exception on error
 
         """
-        self._on_data_available(data)
+        pass
 
 
 class _StreamingProtocolShim(nbio_interface.AbstractStreamProtocol):

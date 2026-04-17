@@ -86,7 +86,7 @@ class HeartbeatChecker:
         :rtype int
 
         """
-        return self._connection.bytes_received
+        pass
 
     @property
     def connection_is_idle(self):
@@ -94,20 +94,17 @@ class HeartbeatChecker:
         to trip the max idle threshold.
 
         """
-        return self._idle_byte_intervals > 0
+        pass
 
     def received(self):
         """Called when a heartbeat is received"""
-        LOGGER.debug('Received heartbeat frame')
-        self._heartbeat_frames_received += 1
+        pass
 
     def _send_heartbeat(self):
         """Invoked by a timer to send a heartbeat when we need to.
 
         """
-        LOGGER.debug('Sending heartbeat frame')
-        self._send_heartbeat_frame()
-        self._start_send_timer()
+        pass
 
     def _check_heartbeat(self):
         """Invoked by a timer to check for broker heartbeats. Checks to see
@@ -115,22 +112,7 @@ class HeartbeatChecker:
         been idle too long.
 
         """
-        if self._has_received_data:
-            self._idle_byte_intervals = 0
-        else:
-            # Connection has not received any data, increment the counter
-            self._idle_byte_intervals += 1
-
-        LOGGER.debug(
-            'Received %i heartbeat frames, sent %i, '
-            'idle intervals %i', self._heartbeat_frames_received,
-            self._heartbeat_frames_sent, self._idle_byte_intervals)
-
-        if self.connection_is_idle:
-            self._close_connection()
-            return
-
-        self._start_check_timer()
+        pass
 
     def stop(self):
         """Stop the heartbeat checker"""
@@ -145,15 +127,7 @@ class HeartbeatChecker:
 
     def _close_connection(self):
         """Close the connection with the AMQP Connection-Forced value."""
-        LOGGER.info('Connection is idle, %i stale byte intervals',
-                    self._idle_byte_intervals)
-        text = HeartbeatChecker._STALE_CONNECTION % self._timeout
-
-        # Abort the stream connection. There is no point trying to gracefully
-        # close the AMQP connection since lack of heartbeat suggests that the
-        # stream is dead.
-        self._connection._terminate_stream(  # pylint: disable=W0212
-            pika.exceptions.AMQPHeartbeatTimeout(text))
+        pass
 
     @property
     def _has_received_data(self):
@@ -162,7 +136,7 @@ class HeartbeatChecker:
         :rtype: bool
 
         """
-        return self._bytes_received != self.bytes_received_on_connection
+        pass
 
     @staticmethod
     def _new_heartbeat_frame():
@@ -171,39 +145,25 @@ class HeartbeatChecker:
         :rtype pika.frame.Heartbeat
 
         """
-        return frame.Heartbeat()
+        pass
 
     def _send_heartbeat_frame(self):
         """Send a heartbeat frame on the connection.
 
         """
-        LOGGER.debug('Sending heartbeat frame')
-        self._connection._send_frame(  # pylint: disable=W0212
-            self._new_heartbeat_frame())
-        self._heartbeat_frames_sent += 1
+        pass
 
     def _start_send_timer(self):
         """Start a new heartbeat send timer."""
-        self._send_timer = self._connection._adapter_call_later(  # pylint: disable=W0212
-            self._send_interval,
-            self._send_heartbeat)
+        pass
 
     def _start_check_timer(self):
         """Start a new heartbeat check timer."""
-        # Note: update counters now to get current values
-        # at the start of the timeout window. Values will be
-        # checked against the connection's byte count at the
-        # end of the window
-        self._update_counters()
-
-        self._check_timer = self._connection._adapter_call_later(  # pylint: disable=W0212
-            self._check_interval,
-            self._check_heartbeat)
+        pass
 
     def _update_counters(self):
         """Update the internal counters for bytes sent and received and the
         number of frames received
 
         """
-        self._bytes_sent = self._connection.bytes_sent
-        self._bytes_received = self._connection.bytes_received
+        pass

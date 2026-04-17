@@ -113,24 +113,7 @@ class SelectConnection(BaseConnection):
         :py:classmethod::`pika.adapters.BaseConnection.create_connection()`.
 
         """
-        nbio = SelectorIOServicesAdapter(custom_ioloop or IOLoop())
-
-        def connection_factory(params):
-            """Connection factory."""
-            if params is None:
-                raise ValueError('Expected pika.connection.Parameters '
-                                 'instance, but got None in params arg.')
-            return cls(
-                parameters=params,
-                custom_ioloop=nbio,
-                internal_connection_workflow=False)
-
-        return cls._start_connection_workflow(
-            connection_configs=connection_configs,
-            connection_factory=connection_factory,
-            nbio=nbio,
-            workflow=workflow,
-            on_done=on_done)
+        pass
 
     def _get_write_buffer_size(self):
         """
@@ -292,13 +275,7 @@ class _Timer:
         :rtype: float
 
         """
-        if self._timeout_heap:
-            now = pika.compat.time_now()
-            interval = max(0, self._timeout_heap[0].deadline - now)
-        else:
-            interval = None
-
-        return interval
+        pass
 
     def process_timeouts(self):
         """Process pending timeouts, invoking callbacks for those whose time has
@@ -400,34 +377,7 @@ class IOLoop(AbstractSelectorIOLoop):
         :returns: The instantiated poller instance supporting `_PollerBase` API
         :rtype: object
         """
-
-        poller = None
-
-        kwargs = dict(
-            get_wait_seconds=get_wait_seconds,
-            process_timeouts=process_timeouts)
-
-        if hasattr(select, 'epoll'):
-            if not SELECT_TYPE or SELECT_TYPE == 'epoll':
-                LOGGER.debug('Using EPollPoller')
-                poller = EPollPoller(**kwargs)
-
-        if not poller and hasattr(select, 'kqueue'):
-            if not SELECT_TYPE or SELECT_TYPE == 'kqueue':
-                LOGGER.debug('Using KQueuePoller')
-                poller = KQueuePoller(**kwargs)
-
-        if (not poller and hasattr(select, 'poll') and
-                hasattr(select.poll(), 'modify')):  # pylint: disable=E1101
-            if not SELECT_TYPE or SELECT_TYPE == 'poll':
-                LOGGER.debug('Using PollPoller')
-                poller = PollPoller(**kwargs)
-
-        if not poller:
-            LOGGER.debug('Using SelectPoller')
-            poller = SelectPoller(**kwargs)
-
-        return poller
+        pass
 
     def call_later(self, delay, callback):
         """Add the callback to the IOLoop timer to be called after delay seconds
@@ -502,10 +452,7 @@ class IOLoop(AbstractSelectorIOLoop):
         :rtype: float
 
         """
-        if self._callbacks:
-            return 0
-
-        return self._timer.get_remaining_interval()
+        pass
 
     def add_handler(self, fd, handler, events):
         """Start watching the given file descriptor for events
@@ -910,7 +857,7 @@ class _PollerBase(pika.compat.AbstractBase):  # pylint: disable=R0902
         so use a pair of simple TCP sockets instead. The sockets will be
         closed and garbage collected by python when the ioloop itself is.
         """
-        return pika.compat.nonblocking_socketpair()
+        pass
 
     def _read_interrupt(self, _interrupt_fd, _events):
         """ Read the interrupt byte(s). We ignore the event mask as we can ony
@@ -919,12 +866,7 @@ class _PollerBase(pika.compat.AbstractBase):  # pylint: disable=R0902
         :param int _interrupt_fd: (unused) The file descriptor to read from
         :param int _events: (unused) The events generated for this fd
         """
-        try:
-            # NOTE Use recv instead of os.read for windows compatibility
-            self._r_interrupt.recv(512)  # pylint: disable=E1101
-        except pika.compat.SOCKET_ERROR as err:
-            if err.errno != errno.EAGAIN:
-                raise
+        pass
 
 
 class SelectPoller(_PollerBase):

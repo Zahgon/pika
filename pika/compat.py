@@ -90,10 +90,7 @@ def to_digit(value):
     """
     Returns value as in integer
     """
-    if value.isdigit():
-        return int(value)
-    match = RE_NUM.match(value)
-    return int(match.groups()[0]) if match else 0
+    pass
 
 
 def get_linux_version(release_str):

@@ -71,19 +71,11 @@ class PlainCredentials:
         :rtype: tuple(str|None, str|None)
 
         """
-        if as_bytes(PlainCredentials.TYPE) not in\
-                as_bytes(start.mechanisms).split():
-            return None, None
-        return (
-            PlainCredentials.TYPE,
-            b'\0' + as_bytes(self.username) + b'\0' + as_bytes(self.password))
+        pass
 
     def erase_credentials(self):
         """Called by Connection when it no longer needs the credentials"""
-        if self.erase_on_connect:
-            LOGGER.info("Erasing stored credential values")
-            self.username = None
-            self.password = None
+        pass
 
 
 class ExternalCredentials:
@@ -115,14 +107,11 @@ class ExternalCredentials:
         :rtype: tuple(str or None, str or None)
 
         """
-        if as_bytes(ExternalCredentials.TYPE) not in\
-                as_bytes(start.mechanisms).split():
-            return None, None
-        return ExternalCredentials.TYPE, b''
+        pass
 
     def erase_credentials(self):  # pylint: disable=R0201
         """Called by Connection when it no longer needs the credentials"""
-        LOGGER.debug('Not supported by this Credentials type')
+        pass
 
 
 # Append custom credential types to this list for validation support

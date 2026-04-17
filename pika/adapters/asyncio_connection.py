@@ -72,24 +72,7 @@ class AsyncioConnection(base_connection.BaseConnection):
         :py:classmethod::`pika.adapters.BaseConnection.create_connection()`.
 
         """
-        nbio = _AsyncioIOServicesAdapter(custom_ioloop)
-
-        def connection_factory(params):
-            """Connection factory."""
-            if params is None:
-                raise ValueError('Expected pika.connection.Parameters '
-                                 'instance, but got None in params arg.')
-            return cls(
-                parameters=params,
-                custom_ioloop=nbio,
-                internal_connection_workflow=False)
-
-        return cls._start_connection_workflow(
-            connection_configs=connection_configs,
-            connection_factory=connection_factory,
-            nbio=nbio,
-            workflow=workflow,
-            on_done=on_done)
+        pass
 
 
 class _AsyncioIOServicesAdapter(io_services_utils.SocketConnectionMixin,
@@ -265,11 +248,7 @@ class _AsyncioIOReference(nbio_interface.AbstractIOReference):
 
         def on_done_adapter(future):
             """Handle completion callback from the future instance"""
-
-            # NOTE: Asyncio schedules callback for cancelled futures, but pika
-            # doesn't want that
-            if not future.cancelled():
-                on_done(future.exception() or future.result())
+            pass
 
         future.add_done_callback(on_done_adapter)
 

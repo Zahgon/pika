@@ -56,6 +56,4 @@ def zero_or_greater(name, value):
     :raises: ValueError
 
     """
-    if int(value) < 0:
-        errmsg = f'{name} must be >= 0, but got {value}'
-        raise ValueError(errmsg)
+    pass

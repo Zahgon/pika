@@ -69,22 +69,4 @@ class TornadoConnection(base_connection.BaseConnection):
         :py:classmethod::`pika.adapters.BaseConnection.create_connection()`.
 
         """
-        nbio = selector_ioloop_adapter.SelectorIOServicesAdapter(
-            custom_ioloop or ioloop.IOLoop.instance())
-
-        def connection_factory(params):
-            """Connection factory."""
-            if params is None:
-                raise ValueError('Expected pika.connection.Parameters '
-                                 'instance, but got None in params arg.')
-            return cls(
-                parameters=params,
-                custom_ioloop=nbio,
-                internal_connection_workflow=False)
-
-        return cls._start_connection_workflow(
-            connection_configs=connection_configs,
-            connection_factory=connection_factory,
-            nbio=nbio,
-            workflow=workflow,
-            on_done=on_done)
+        pass

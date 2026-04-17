@@ -46,8 +46,7 @@ class Method(AMQPObject):
         :param bytes body: The message body
 
         """
-        self._properties = properties  # pylint: disable=W0201
-        self._body = body  # pylint: disable=W0201
+        pass
 
     def get_properties(self):
         """Return the properties if they are set.
@@ -55,7 +54,7 @@ class Method(AMQPObject):
         :rtype: pika.frame.Properties
 
         """
-        return self._properties
+        pass
 
     def get_body(self):
         """Return the message body if it is set.
@@ -63,7 +62,7 @@ class Method(AMQPObject):
         :rtype: str|unicode
 
         """
-        return self._body
+        pass
 
 
 class Properties(AMQPObject):

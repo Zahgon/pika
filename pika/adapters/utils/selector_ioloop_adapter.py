@@ -379,31 +379,7 @@ class SelectorIOServicesAdapter(io_services_utils.SocketConnectionMixin,
             We ignore ERROR here since `set_reader()`/`set_writer()` don't
             request for it.
         """
-        callbacks = self._watchers[fd]
-
-        if events & self._readable_mask and callbacks.reader is None:
-            # NOTE: we check for consistency here ahead of the writer callback
-            # because the writer callback, if any, can change the events being
-            # watched
-            LOGGER.warning(
-                'READ indicated on fd=%s, but reader callback is None; '
-                'events=%s', fd, bin(events))
-
-        if events & self._writable_mask:
-            if callbacks.writer is not None:
-                callbacks.writer()
-            else:
-                LOGGER.warning(
-                    'WRITE indicated on fd=%s, but writer callback is None; '
-                    'events=%s', fd, bin(events))
-
-        if events & self._readable_mask:
-            if callbacks.reader is not None:
-                callbacks.reader()
-            else:
-                # Reader callback might have been removed in the scope of writer
-                # callback.
-                pass
+        pass
 
 
 class _FileDescriptorCallbacks:
@@ -560,40 +536,11 @@ class _AddressResolver:
         function on the given I/O loop
 
         """
-        try:
-            result = socket.getaddrinfo(host=self._host, port=self._port, family=self._family,
-                                        type=self._socktype, proto=self._proto,
-                                        flags=self._flags)
-        except Exception as exc:  # pylint: disable=W0703
-            LOGGER.error('Address resolution failed: %r', exc)
-            result = exc
-
-        self._result = result
-
-        # Schedule result to be returned to user via user's event loop
-        with self._mutex:
-            if self._state == self.ACTIVE:
-                self._loop.add_callback(self._dispatch_result)
-            else:
-                LOGGER.debug(
-                    'Asynchronous getaddrinfo cancellation detected; '
-                    'in thread; host=%r', self._host)
+        pass
 
     def _dispatch_result(self):
         """This is called from the user's I/O loop to pass the result to the
          user via the user's on_done callback
 
         """
-        if self._state == self.ACTIVE:
-            self._state = self.COMPLETED
-            try:
-                LOGGER.debug(
-                    'Invoking asynchronous getaddrinfo() completion callback; '
-                    'host=%r', self._host)
-                self._on_done(self._result)
-            finally:
-                self._cleanup()
-        else:
-            LOGGER.debug(
-                'Asynchronous getaddrinfo cancellation detected; '
-                'in I/O loop context; host=%r', self._host)
+        pass

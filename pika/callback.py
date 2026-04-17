@@ -21,45 +21,12 @@ def name_or_value(value):
     :rtype: str
 
     """
-    # Is it subclass of AMQPObject
-    try:
-        if issubclass(value, amqp_object.AMQPObject):
-            return value.NAME
-    except TypeError:
-        pass
-
-    # Is it a Pika frame object?
-    if isinstance(value, frame.Method):
-        return value.method.NAME
-
-    # Is it a Pika frame object (go after Method since Method extends this)
-    if isinstance(value, amqp_object.AMQPObject):
-        return value.NAME
-
-    # Cast the value to a string
-    return canonical_str(value)
+    pass
 
 
 def sanitize_prefix(function):
     """Automatically call name_or_value on the prefix passed in."""
-
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        args = list(args)
-        offset = 1
-        if 'prefix' in kwargs:
-            kwargs['prefix'] = name_or_value(kwargs['prefix'])
-        elif len(args) - 1 >= offset:
-            args[offset] = name_or_value(args[offset])
-            offset += 1
-        if 'key' in kwargs:
-            kwargs['key'] = name_or_value(kwargs['key'])
-        elif len(args) - 1 >= offset:
-            args[offset] = name_or_value(args[offset])
-
-        return function(*tuple(args), **kwargs)
-
-    return wrapper
+    pass
 
 
 def check_for_prefix_and_key(function):
@@ -67,31 +34,7 @@ def check_for_prefix_and_key(function):
     for the instance.
 
     """
-
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        offset = 1
-        # Sanitize the prefix
-        if 'prefix' in kwargs:
-            prefix = name_or_value(kwargs['prefix'])
-        else:
-            prefix = name_or_value(args[offset])
-            offset += 1
-
-        # Make sure to sanitize the key as well
-        if 'key' in kwargs:
-            key = name_or_value(kwargs['key'])
-        else:
-            key = name_or_value(args[offset])
-
-        # Make sure prefix and key are in the stack
-        if prefix not in args[0]._stack or key not in args[0]._stack[prefix]:  # pylint: disable=W0212
-            return False
-
-        # Execute the method
-        return function(*args, **kwargs)
-
-    return wrapper
+    pass
 
 
 class CallbackManager:
@@ -194,9 +137,7 @@ class CallbackManager:
         :rtype: None or int
 
         """
-        if not prefix in self._stack or not key in self._stack[prefix]:
-            return None
-        return len(self._stack[prefix][key])
+        pass
 
     @sanitize_prefix
     @check_for_prefix_and_key
@@ -280,8 +221,7 @@ class CallbackManager:
         :param str key: The callback key
 
         """
-        del self._stack[prefix][key]
-        self._cleanup_callback_dict(prefix, key)
+        pass
 
     def _arguments_match(self, callback_dict, args):
         """Validate if the arguments passed in match the expected arguments in

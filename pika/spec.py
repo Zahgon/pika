@@ -74,31 +74,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.version_major = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.version_minor = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            (self.server_properties, offset) = data.decode_table(encoded, offset)
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.mechanisms = encoded[offset:offset + length]
-            try:
-                self.mechanisms = str(self.mechanisms)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.locales = encoded[offset:offset + length]
-            try:
-                self.locales = str(self.locales)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -130,21 +109,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            (self.client_properties, offset) = data.decode_table(encoded, offset)
-            self.mechanism, offset = data.decode_short_string(encoded, offset)
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.response = encoded[offset:offset + length]
-            try:
-                self.response = str(self.response)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            self.locale, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -172,18 +140,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.challenge = encoded[offset:offset + length]
-            try:
-                self.challenge = str(self.challenge)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -204,18 +164,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.response = encoded[offset:offset + length]
-            try:
-                self.response = str(self.response)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -238,16 +190,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.channel_max = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.frame_max = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.heartbeat = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -268,16 +214,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.channel_max = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.frame_max = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.heartbeat = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -298,15 +238,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.virtual_host, offset = data.decode_short_string(encoded, offset)
-            self.capabilities, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.insist = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -332,11 +267,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.known_hosts, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -358,17 +292,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.reply_code = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.reply_text, offset = data.decode_short_string(encoded, offset)
-            self.class_id = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.method_id = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -390,10 +317,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -409,11 +336,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.reason, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -432,10 +358,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -452,19 +378,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.mechanisms = encoded[offset:offset + length]
-            try:
-                self.mechanisms = str(self.mechanisms)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            self.reason, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -488,10 +405,10 @@ class Connection(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -513,11 +430,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.out_of_band, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -536,18 +452,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            length = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.channel_id = encoded[offset:offset + length]
-            try:
-                self.channel_id = str(self.channel_id)
-            except UnicodeEncodeError:
-                pass
-            offset += length
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -568,13 +476,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.active = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -594,13 +499,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.active = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -623,17 +525,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.reply_code = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.reply_text, offset = data.decode_short_string(encoded, offset)
-            self.class_id = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.method_id = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -655,10 +550,10 @@ class Channel(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -685,18 +580,10 @@ class Access(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.realm, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.exclusive = (bit_buffer & (1 << 0)) != 0
-            self.passive = (bit_buffer & (1 << 1)) != 0
-            self.active = (bit_buffer & (1 << 2)) != 0
-            self.write = (bit_buffer & (1 << 3)) != 0
-            self.read = (bit_buffer & (1 << 4)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -727,12 +614,10 @@ class Access(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -763,22 +648,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.type, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.passive = (bit_buffer & (1 << 0)) != 0
-            self.durable = (bit_buffer & (1 << 1)) != 0
-            self.auto_delete = (bit_buffer & (1 << 2)) != 0
-            self.internal = (bit_buffer & (1 << 3)) != 0
-            self.nowait = (bit_buffer & (1 << 4)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -814,10 +687,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -836,17 +709,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.if_unused = (bit_buffer & (1 << 0)) != 0
-            self.nowait = (bit_buffer & (1 << 1)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -872,10 +738,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -896,19 +762,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.destination, offset = data.decode_short_string(encoded, offset)
-            self.source, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -939,10 +796,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -963,19 +820,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.destination, offset = data.decode_short_string(encoded, offset)
-            self.source, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1006,10 +854,10 @@ class Exchange(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1038,21 +886,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.passive = (bit_buffer & (1 << 0)) != 0
-            self.durable = (bit_buffer & (1 << 1)) != 0
-            self.exclusive = (bit_buffer & (1 << 2)) != 0
-            self.auto_delete = (bit_buffer & (1 << 3)) != 0
-            self.nowait = (bit_buffer & (1 << 4)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1087,15 +924,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            self.message_count = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.consumer_count = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1121,19 +953,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1164,10 +987,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1185,16 +1008,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1218,12 +1035,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.message_count = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1244,18 +1059,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.if_unused = (bit_buffer & (1 << 0)) != 0
-            self.if_empty = (bit_buffer & (1 << 1)) != 0
-            self.nowait = (bit_buffer & (1 << 2)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1283,12 +1090,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.message_count = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1309,16 +1114,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1345,10 +1144,10 @@ class Queue(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1372,17 +1171,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.prefetch_size = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            self.prefetch_count = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.global_qos = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1404,10 +1196,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1430,21 +1222,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            self.consumer_tag, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.no_local = (bit_buffer & (1 << 0)) != 0
-            self.no_ack = (bit_buffer & (1 << 1)) != 0
-            self.exclusive = (bit_buffer & (1 << 2)) != 0
-            self.nowait = (bit_buffer & (1 << 3)) != 0
-            (self.arguments, offset) = data.decode_table(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1478,11 +1259,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.consumer_tag, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1502,14 +1282,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.consumer_tag, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1532,11 +1308,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.consumer_tag, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1559,18 +1334,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.mandatory = (bit_buffer & (1 << 0)) != 0
-            self.immediate = (bit_buffer & (1 << 1)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1602,15 +1369,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.reply_code = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.reply_text, offset = data.decode_short_string(encoded, offset)
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1640,18 +1402,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.consumer_tag, offset = data.decode_short_string(encoded, offset)
-            self.delivery_tag = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.redelivered = (bit_buffer & (1 << 0)) != 0
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1683,16 +1437,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            self.ticket = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            self.queue, offset = data.decode_short_string(encoded, offset)
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.no_ack = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1720,19 +1468,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.delivery_tag = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.redelivered = (bit_buffer & (1 << 0)) != 0
-            self.exchange, offset = data.decode_short_string(encoded, offset)
-            self.routing_key, offset = data.decode_short_string(encoded, offset)
-            self.message_count = struct.unpack_from('>I', encoded, offset)[0]
-            offset += 4
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1760,11 +1499,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.cluster_id, offset = data.decode_short_string(encoded, offset)
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1784,15 +1522,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.delivery_tag = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.multiple = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1814,15 +1547,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.delivery_tag = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.requeue = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1843,13 +1571,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.requeue = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1869,13 +1594,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.requeue = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1895,10 +1617,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1916,16 +1638,10 @@ class Basic(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            self.delivery_tag = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.multiple = (bit_buffer & (1 << 0)) != 0
-            self.requeue = (bit_buffer & (1 << 1)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1954,10 +1670,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1973,10 +1689,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -1992,10 +1708,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2011,10 +1727,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2030,10 +1746,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2049,10 +1765,10 @@ class Tx(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2074,13 +1790,10 @@ class Confirm(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return True
+            pass
 
         def decode(self, encoded, offset=0):
-            bit_buffer = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-            self.nowait = (bit_buffer & (1 << 0)) != 0
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2100,10 +1813,10 @@ class Confirm(amqp_object.Class):
 
         @property
         def synchronous(self):
-            return False
+            pass
 
         def decode(self, encoded, offset=0):
-            return self
+            pass
 
         def encode(self):
             pieces = list()
@@ -2151,75 +1864,7 @@ class BasicProperties(amqp_object.Properties):
         self.cluster_id = cluster_id
 
     def decode(self, encoded, offset=0):
-        flags = 0
-        flagword_index = 0
-        while True:
-            partial_flags = struct.unpack_from('>H', encoded, offset)[0]
-            offset += 2
-            flags = flags | (partial_flags << (flagword_index * 16))
-            if not (partial_flags & 1):
-                break
-            flagword_index += 1
-        if flags & BasicProperties.FLAG_CONTENT_TYPE:
-            self.content_type, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.content_type = None
-        if flags & BasicProperties.FLAG_CONTENT_ENCODING:
-            self.content_encoding, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.content_encoding = None
-        if flags & BasicProperties.FLAG_HEADERS:
-            (self.headers, offset) = data.decode_table(encoded, offset)
-        else:
-            self.headers = None
-        if flags & BasicProperties.FLAG_DELIVERY_MODE:
-            self.delivery_mode = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-        else:
-            self.delivery_mode = None
-        if flags & BasicProperties.FLAG_PRIORITY:
-            self.priority = struct.unpack_from('B', encoded, offset)[0]
-            offset += 1
-        else:
-            self.priority = None
-        if flags & BasicProperties.FLAG_CORRELATION_ID:
-            self.correlation_id, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.correlation_id = None
-        if flags & BasicProperties.FLAG_REPLY_TO:
-            self.reply_to, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.reply_to = None
-        if flags & BasicProperties.FLAG_EXPIRATION:
-            self.expiration, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.expiration = None
-        if flags & BasicProperties.FLAG_MESSAGE_ID:
-            self.message_id, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.message_id = None
-        if flags & BasicProperties.FLAG_TIMESTAMP:
-            self.timestamp = struct.unpack_from('>Q', encoded, offset)[0]
-            offset += 8
-        else:
-            self.timestamp = None
-        if flags & BasicProperties.FLAG_TYPE:
-            self.type, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.type = None
-        if flags & BasicProperties.FLAG_USER_ID:
-            self.user_id, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.user_id = None
-        if flags & BasicProperties.FLAG_APP_ID:
-            self.app_id, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.app_id = None
-        if flags & BasicProperties.FLAG_CLUSTER_ID:
-            self.cluster_id, offset = data.decode_short_string(encoded, offset)
-        else:
-            self.cluster_id = None
-        return self
+        pass
 
     def encode(self):
         pieces = list()
